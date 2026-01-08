@@ -352,7 +352,11 @@
 -r:"Library/Bee/artifacts/200b0aE.dag/UnityEngine.UI.ref.dll"
 -analyzer:"/Applications/Unity/Hub/Editor/2022.3.62f3c1/Unity.app/Contents/Tools/Unity.SourceGenerators/Unity.Properties.SourceGenerator.dll"
 -analyzer:"/Applications/Unity/Hub/Editor/2022.3.62f3c1/Unity.app/Contents/Tools/Unity.SourceGenerators/Unity.SourceGenerators.dll"
+"Assets/Scripts/BlizzardController.cs"
 "Assets/Scripts/PlayerAnimation.cs"
+"Assets/Scripts/PlayerCam.cs"
+"Assets/Scripts/PlayerMov.cs"
+"Assets/Scripts/PlayerRen.cs"
 -langversion:9.0
 /deterministic
 /optimize+

@@ -65,12 +65,15 @@ Shader "Custom/AlphaTestUnlit"
                 
                 // Alpha test: discard pixels below cutoff
                 clip(texColor.a - _Cutoff);
-                
-                // Simple unlit with slight directional light tint
+
+                // Ambient + directional lighting so ambient brightness changes are visible
+                fixed3 normal = normalize(i.normal);
+                fixed3 ambient = ShadeSH9(float4(normal, 1.0));
                 fixed3 lightDir = normalize(_WorldSpaceLightPos0.xyz);
-                fixed ndotl = max(0.0, dot(normalize(i.normal), lightDir));
-                fixed3 finalColor = texColor.rgb * (0.5 + 0.5 * ndotl);
-                
+                fixed ndotl = max(0.0, dot(normal, lightDir));
+                fixed3 directional = _LightColor0.rgb * ndotl;
+                fixed3 finalColor = texColor.rgb * (ambient + directional);
+
                 return fixed4(finalColor, 1.0);
             }
             ENDCG

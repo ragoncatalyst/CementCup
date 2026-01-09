@@ -57,9 +57,35 @@ public class PlayerMov : MonoBehaviour
     void Start()
     {
         rb = GetComponent<Rigidbody>();
+        
+        // If Rigidbody not on this object, try to find it on PlayerEmpty (physics root)
         if (rb == null)
         {
-            Debug.LogError("PlayerMov: Rigidbody not found on " + gameObject.name + ". Please add a Rigidbody component.");
+            var playerEmpty = GameObject.Find("PlayerEmpty");
+            if (playerEmpty != null)
+            {
+                rb = playerEmpty.GetComponent<Rigidbody>();
+                if (rb != null)
+                {
+                    Debug.Log("PlayerMov: Found Rigidbody on PlayerEmpty");
+                    
+                    // If Rigidbody is on a different object, we need to add a collision forwarder
+                    // to relay OnTriggerEnter/Exit events from the physics object to this script
+                    var forwarder = playerEmpty.GetComponent<GroundContactForwarder>();
+                    if (forwarder == null)
+                    {
+                        forwarder = playerEmpty.AddComponent<GroundContactForwarder>();
+                        forwarder.targetPlayerMov = this;
+                        forwarder.groundTag = groundTag;
+                        Debug.Log("PlayerMov: Added GroundContactForwarder to PlayerEmpty");
+                    }
+                }
+            }
+        }
+        
+        if (rb == null)
+        {
+            Debug.LogError("PlayerMov: Rigidbody not found on " + gameObject.name + " or PlayerEmpty. Please add a Rigidbody component.");
             enabled = false;
             return;
         }
@@ -267,46 +293,50 @@ public class PlayerMov : MonoBehaviour
     void MovZPos() { float v = speed * (isCrouching ? 0.6f : (isRunning ? 1.5f : 1f)); fixedDesiredHorizontal = new Vector3(0f, 0f, v); lastDesiredHorizontal = fixedDesiredHorizontal; }
     void MovZNeg() { float v = speed * (isCrouching ? 0.6f : (isRunning ? 1.5f : 1f)); fixedDesiredHorizontal = new Vector3(0f, 0f, -v); lastDesiredHorizontal = fixedDesiredHorizontal; }
 
+    // Public method to handle ground contact, can be called by forwarder or directly
+    public void HandleGroundContact(bool isEntering)
+    {
+        if (isEntering)
+        {
+            bool wasZero = groundContacts == 0;
+            groundContacts++;
+            if (wasZero)
+            {
+                // first contact for this landing
+                consumedOnThisLanding = false;
+                TryConsumeWaitlistOnLanding();
+            }
+        }
+        else
+        {
+            groundContacts = Mathf.Max(0, groundContacts - 1);
+            if (groundContacts == 0) consumedOnThisLanding = false;
+        }
+    }
+
     private void OnTriggerEnter(Collider other)
     {
         if (!other.CompareTag(groundTag)) return;
-        bool wasZero = groundContacts == 0;
-        groundContacts++;
-        if (wasZero)
-        {
-            // first contact for this landing
-            consumedOnThisLanding = false;
-            TryConsumeWaitlistOnLanding();
-        }
+        HandleGroundContact(true);
     }
 
     private void OnTriggerExit(Collider other)
     {
         if (!other.CompareTag(groundTag)) return;
-        groundContacts = Mathf.Max(0, groundContacts - 1);
-        if (groundContacts == 0) consumedOnThisLanding = false;
+        HandleGroundContact(false);
     }
 
     private void OnCollisionEnter(Collision collision)
     {
         // treat non-trigger collisions with ground as landing
-        var other = collision.collider;
-        if (!other.CompareTag(groundTag)) return;
-        bool wasZero = groundContacts == 0;
-        groundContacts++;
-        if (wasZero)
-        {
-            consumedOnThisLanding = false;
-            TryConsumeWaitlistOnLanding();
-        }
+        if (!collision.collider.CompareTag(groundTag)) return;
+        HandleGroundContact(true);
     }
 
     private void OnCollisionExit(Collision collision)
     {
-        var other = collision.collider;
-        if (!other.CompareTag(groundTag)) return;
-        groundContacts = Mathf.Max(0, groundContacts - 1);
-        if (groundContacts == 0) consumedOnThisLanding = false;
+        if (!collision.collider.CompareTag(groundTag)) return;
+        HandleGroundContact(false);
     }
 
     // Landing consumer: clears expired short requests, then consumes head of queue

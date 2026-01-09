@@ -58,6 +58,17 @@ public class BlizzardController : MonoBehaviour
         EnsureParticleRendererHasValidMaterial(mainPS);
         if (fadePrefab == null) fadePrefab = CreateFadePrefab();
         BuildFadePool();
+
+        // Auto-find PlayerEmpty as anchor if not set
+        if (anchor == null)
+        {
+            var playerEmpty = GameObject.Find("PlayerEmpty");
+            if (playerEmpty != null)
+            {
+                anchor = playerEmpty.transform;
+                Debug.Log("BlizzardController: Set anchor to PlayerEmpty");
+            }
+        }
     }
 
     void LateUpdate()

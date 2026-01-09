@@ -136,8 +136,9 @@ public class PlayerCam : MonoBehaviour
             if (go != null) playerVisual = go.transform;
         }
 
-        // Use PlayerQuad for visual tracking, PlayerEmpty for PlayerMov reference
-        Transform followTarget = playerVisual != null ? playerVisual : player;
+        // Use PlayerEmpty (physics root) for following, not the visual quad
+        // This ensures camera doesn't get affected by the quad's billboard rotation
+        Transform followTarget = player != null ? player : playerVisual;
         if (followTarget == null)
         {
             Debug.LogWarning("PlayerCam: No follow target found!");
@@ -174,12 +175,6 @@ public class PlayerCam : MonoBehaviour
         Vector3 swayOffset3D = transform.right * swayOffset;
         
         Vector3 newPos = followTarget.position + baseOffset + swayOffset3D;
-        
-        // Debug every 30 frames
-        if (Time.frameCount % 30 == 0)
-        {
-            Debug.Log($"PlayerCam LateUpdate: FollowTarget={followTarget.position}, Camera={newPos}, Distance={currentDistance}");
-        }
         
         transform.position = newPos;
     }

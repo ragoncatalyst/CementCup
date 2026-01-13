@@ -36,18 +36,18 @@ public class ObjectInteractable : MonoBehaviour
     [SerializeField] private float smallShrinkY = 0.98f;
 
     // internal
-    private Coroutine popCoroutine = null;
-    private Vector3 visualOriginalLocalScale;
+    protected Coroutine popCoroutine = null;
+    protected Vector3 visualOriginalLocalScale;
 
     // cached renderer reference for bottom calculations
-    private Renderer visualRenderer;
+    protected Renderer visualRenderer;
 
     public bool IsInteractable => isInteractable;
 
     // expose textBox for callers that need to coordinate shared TMP usage
     public TMP_Text TextBox => textBox;
 
-    private void Start()
+    protected virtual void Start()
     {
         // Ensure dynamic objects use continuous collision detection and interpolation
         var rb = GetComponent<Rigidbody>();
@@ -77,7 +77,7 @@ public class ObjectInteractable : MonoBehaviour
         visualRenderer = visualRoot.GetComponentInChildren<Renderer>();
     }
 
-    public void Interact(GameObject interactor)
+    public virtual void Interact(GameObject interactor)
     {
         if (!isInteractable) return;
 
@@ -96,7 +96,7 @@ public class ObjectInteractable : MonoBehaviour
         popCoroutine = StartCoroutine(PopAnimation());
     }
 
-    IEnumerator PopAnimation()
+    protected IEnumerator PopAnimation()
     {
         if (visualRoot == null) yield break;
 
